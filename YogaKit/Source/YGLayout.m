@@ -416,9 +416,26 @@ static YGSize YGMeasureView(YGNodeRef node, double width, YGMeasureMode widthMod
         .height = constrainedHeight
     }];
 #endif
+    CGSize size = (CGSize){
+        .width = YGSanitizeMeasurement(
+                                       constrainedWidth, sizeThatFits.width, widthMode),
+        .height = YGSanitizeMeasurement(
+                                        constrainedHeight, sizeThatFits.height, heightMode),
+    };
 
-    return (YGSize){ .width = YGSanitizeMeasurement(constrainedWidth, sizeThatFits.width, widthMode),
-                     .height = YGSanitizeMeasurement(constrainedHeight, sizeThatFits.height, heightMode)
+        // Use original implementation when transform is not used on view
+    if (CGAffineTransformEqualToTransform(CGAffineTransformIdentity, view.transform)) {
+        return (YGSize){
+            .width = size.width,
+            .height = size.height,
+        };
+    }
+        // Using abs() to normalize size after applying transform
+    CGSize transformed = CGSizeApplyAffineTransform(size, view.transform);
+
+    return (YGSize){
+        .width = abs(transformed.width),
+        .height = abs(transformed.height),
     };
 }
 
